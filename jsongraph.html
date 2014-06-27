@@ -64,7 +64,13 @@ d3.json("./examples/les_miserables.json", function(error, topgraph) {
       .data(topgraph.graph.edges)
     .enter().append("line")
       .attr("class", "link")
-      .style("stroke-width", function(d) { return Math.sqrt(d.metadata.value); });
+      .style("stroke-width", function(d) {
+          if( typeof(d.metadata)==="undefined")
+            return 1;
+          if( typeof(d.metadata.value)==="undefined")
+            return 1;
+          return Math.sqrt(d.metadata.value);
+          });
 
   // Render the nodes first
   var node = svg.selectAll(".node")
