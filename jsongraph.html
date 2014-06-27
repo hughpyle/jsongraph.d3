@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.link {
+  stroke: #999;
+  stroke-opacity: .6;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+/*
+    D3 example loading jsongraph
+
+    Example code is a straightforwrd copy from the Force-Directed-Graph D3 example
+    http://bl.ocks.org/mbostock/4062045
+
+*/
+
+var width = 960,
+    height = 500;
+
+var color = d3.scale.category20();
+
+var force = d3.layout.force()
+    .charge(-120)
+    .linkDistance(30)
+    .size([width, height]);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+
+d3.json("./examples/les_miserables.json", function(error, topgraph) {
+
+  // Resolve the edges' source and target names
+  var nodelist = [];
+  topgraph.graph.nodes.forEach( function(node) {
+    nodelist[node.id] = node;
+  });
+  topgraph.graph.edges.forEach( function(edge) {
+    edge.source = nodelist[edge.source];
+    edge.target = nodelist[edge.target];
+  });
+
+  // Load into a force-directed D3 layout
+  force
+      .nodes(topgraph.graph.nodes)
+      .links(topgraph.graph.edges)
+      .start();
+
+
+  // Render the edges
+  var link = svg.selectAll(".link")
+      .data(topgraph.graph.edges)
+    .enter().append("line")
+      .attr("class", "link")
+      .style("stroke-width", function(d) { return Math.sqrt(d.metadata.value); });
+
+  // Render the nodes first
+  var node = svg.selectAll(".node")
+      .data(topgraph.graph.nodes)
+    .enter()
+      .append("g")
+      .attr("class", "node")
+      .call(force.drag);
+
+  node.append("circle")
+      .attr("r", 5)
+      .style("fill", function(d) { return color(d.metadata.group); });
+
+  node.append("text")
+        .text(function(d) { return d.label; })
+        .style("stroke", color(0)).style("stroke-width","0").style("font-family", "Arial").style("font-size", 12);
+
+
+  // Force-directed layout functions
+  force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+  });
+});
+
+</script>
